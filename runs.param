@@ -1,0 +1,68 @@
+#!/usr/bin/python
+from os import environ, getcwd
+import numpy as np
+from random import randint
+
+# Read in the general parameters:
+exec(compile(open('general.param').read(), 'general.param', 'exec'))
+
+params = []
+
+# Parameter set 1:
+params.append({
+    # General parameters:
+    # 'comment': ['first_set_of_test_runs'],
+    'dim': [1, 2, 3],
+    'U1': [1.0, 3.0, 8.0],
+    'U2': [0.5],
+    'T': [1.0],
+    'pumpA': [0.0, 1.0, 2.0, 3.0, 5.0, 8.0, 12.0],
+    'probeA': [0.0],
+
+    # Other parameters:
+    'mu': [0.0],
+    'v_0': [1.0],
+    'tmax': [10.0],
+    'dt': [0.01],
+    'dw': [0.01],
+    'tol': [0.001],
+    'solver': [0],
+    'fermion': [1],
+    'wC': [50],
+    'phonon': [0],
+    'Lambda': [0.0],
+    't_diss_end': [100.0],
+    'pumpOmega': [10.0],
+    't_pump_start': [0.0],
+    't_pump_end': [100.0],
+    't_probe_start': [0.0],
+    'probeOmega': [1.25],
+    't_probe_end': [100.0],
+    'lattice_structure': [1],
+    'excludedparam': [-999],
+})
+
+prefix = "heterostructures"
+numConcurrentProcesses = 1  # Local parallel execution of serial code.
+numThreadsPerNode = 1 # MPI ranks per compute node.
+numNodesPerJob = 1 # MPI number of compute nodes.
+memory = "16GB"
+queueName = 'gcohen'
+executable_name = 'python3 ' + execDir + '/dmft.py --params'
+secondary_keys = []  # These are grouped together in subdirectories.
+excluded_keys = ['T', 'probeA', 'mu', 'v_0', 'dw', 'tol', 'solver', 'fermion', 'wC', 'phonon', 'Lambda', 't_diss_end', 'pumpOmega', 't_pump_start', 't_pump_end', 't_probe_start', 'probeOmega', 't_probe_end', 'lattice_structure', 'excludedparam']  # These are excluded from directory names.
+
+def walltime_func(pdict):
+    return calc_walltime(100 * 3600)
+def seed_func(pdict):
+    return randint(0,1000000)
+
+# Read in the execution parameters:
+exec(compile(open('execution.param').read(), 'execution.param', 'exec'))
+
+# The following allows the creation of derived parameters by post-processing
+# functions. This is not needed in the example, where the parameter file is
+# itself a python script, but can be useful in general.
+# To use, add items of the form ['new_key', func_of_pdict].
+post_data = [
+    ['postderived', lambda pdict: -0.5 * pdict['T']], ['seed', seed_func]
